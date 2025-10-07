@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 
 export interface Settings {
-    hostUrl: string
+    hostUrl: URL
 }
 
-export default createContext<Settings>({ hostUrl: '' })
+export default createContext<Settings>({ hostUrl: new URL('http://localhost') })

@@ -18,14 +18,14 @@ export default function PlayerControls(props: PlayerControlsProps) {
     const audioStatus = useQuery({
         queryKey: ['audioStatus'],
         queryFn: async () => {
-            const data = await fetch(`${baseUrl}/status`)
+            const data = await fetch(new URL('./status', baseUrl))
             return data.json()
         }
     })
 
     const setPlayingState = useMutation({
         mutationFn: async (command: 'start' | 'pause' | 'stop') => {
-            const response = await fetch(`${baseUrl}/status/playing`, {
+            const response = await fetch(new URL('./status/playing', baseUrl), {
                 method: 'PUT', body: command
             })
             return response.json()
@@ -35,7 +35,7 @@ export default function PlayerControls(props: PlayerControlsProps) {
 
     const setLoopState = useMutation({
         mutationFn: async (loop: boolean) => {
-            const response = await fetch(`${baseUrl}/status/loop`, {
+            const response = await fetch(new URL('./status/loop', baseUrl), {
                 method: 'PUT', body: loop ? 'true' : 'false'
             })
             return response.json()

@@ -1,20 +1,9 @@
-import { useContext } from 'react'
-import { useQuery } from '@tanstack/react-query'
-
 import Col from 'react-bootstrap/Col'
 
-import SettingsContext from '../SettingsContext'
+import useAudioInfo from './useAudioInfo'
 
 export default function AudioInfo() {
-    const baseUrl = useContext(SettingsContext).hostUrl
-
-    const audioInfo = useQuery({
-        queryKey: ['audioInfo'],
-        queryFn: async () => {
-            const data = await fetch(`${baseUrl}/file`)
-            return data.json()
-        }
-    })
+    const audioInfo = useAudioInfo()
 
     if (audioInfo.isLoading) return 'Loading'
     if (audioInfo.isError) return 'Goofed'

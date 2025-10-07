@@ -17,10 +17,10 @@ interface SettingsProps {
 
 export default function Settings(props: SettingsProps) {
     const settings = useContext(SettingsContext)
-    const [hostUrl, setHostUrl] = useState(settings.hostUrl)
+    const [hostUrl, setHostUrl] = useState(settings.hostUrl.toString())
 
     const getSettings = (): Settings => ({
-        hostUrl
+        hostUrl: new URL(hostUrl)
     })
 
     return <Container>

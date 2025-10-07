@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext } from 'react'
 
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
@@ -9,16 +9,20 @@ import AudioUploader from './audioUploader'
 import PlayerControls from './playerControls'
 
 import SettingsContext from '../SettingsContext'
+import useAudioInfo from './useAudioInfo'
 
 export default function AudioPlayer() {
-    const serverUrl = useContext(SettingsContext).hostUrl.concat('/audioplayer')
-    const [hasFile, setHasFile] = useState(false)
+    const settings = useContext(SettingsContext)
+    const playerBasePath = new URL('./audioplayer/', settings.hostUrl)
 
-    return <SettingsContext value={{ hostUrl: serverUrl }}>
+    const audioInfo = useAudioInfo(playerBasePath)
+    const hasFile = audioInfo.isLoading == false && audioInfo.data.fileName != null
+
+    return <SettingsContext value={{ hostUrl: playerBasePath }}>
         <Container fluid>
             <Row className='mt-3 mb-2'>
                 <Col xs={9}>
-                    <AudioUploader onFileUpload={() => setHasFile(true)} />
+                    <AudioUploader />
                 </Col>
                 <Col>
                     <PlayerControls hasFile={hasFile} />

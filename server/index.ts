@@ -9,7 +9,7 @@ app.use(cors({ origin: '*' }))
 
 app.use('/audioplayer', audioplayer)
 
-app.get('/', (_req, res) => res.sendStatus(200))
+app.get('/', (_req, res) => res.send('pi-audio-controller-server'))
 
 app.listen(port, () => {
     console.log(`Listening on ${port}`)

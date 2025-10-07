@@ -6,12 +6,9 @@ import InputGroup from 'react-bootstrap/InputGroup'
 import Button from 'react-bootstrap/Button'
 
 import SettingsContext from '../SettingsContext'
+import { audioInfoQueryKey } from './useAudioInfo'
 
-interface AudioUploaderProps {
-    onFileUpload: () => void
-}
-
-export default function AudioUploader(props: AudioUploaderProps) {
+export default function AudioUploader() {
     const baseUrl = useContext(SettingsContext).hostUrl
     const queryClient = useQueryClient()
 
@@ -28,10 +25,7 @@ export default function AudioUploader(props: AudioUploaderProps) {
             })
             return await response.json()
         },
-        onSuccess: (data) => {
-            queryClient.setQueryData(['audioInfo'], data)
-            props.onFileUpload()
-        }
+        onSuccess: (data) => queryClient.setQueryData([audioInfoQueryKey], data)
     })
 
     return <InputGroup>
