@@ -11,10 +11,10 @@ import PlayerControls from './playerControls'
 import SettingsContext from '../SettingsContext'
 
 export default function AudioPlayer() {
-    const serverUrl = useContext(SettingsContext).serverUrl.concat('/audioplayer')
+    const serverUrl = useContext(SettingsContext).hostUrl.concat('/audioplayer')
     const [hasFile, setHasFile] = useState(false)
 
-    return <SettingsContext value={{ serverUrl }}>
+    return <SettingsContext value={{ hostUrl: serverUrl }}>
         <Container fluid>
             <Row className='mt-3 mb-2'>
                 <Col xs={9}>
@@ -24,7 +24,7 @@ export default function AudioPlayer() {
                     <PlayerControls hasFile={hasFile} />
                 </Col>
             </Row>
-            <hr />
+            {hasFile && <hr />}
             {hasFile && <Row>
                 <AudioInfo />
             </Row>}

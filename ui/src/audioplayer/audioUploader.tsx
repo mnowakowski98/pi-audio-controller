@@ -12,7 +12,7 @@ interface AudioUploaderProps {
 }
 
 export default function AudioUploader(props: AudioUploaderProps) {
-    const baseUrl = useContext(SettingsContext).serverUrl
+    const baseUrl = useContext(SettingsContext).hostUrl
     const queryClient = useQueryClient()
 
     const [audioFile, setAudioFile] = useState<File | null>()

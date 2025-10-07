@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 
-interface SettingsContext {
-    serverUrl: string
+export interface Settings {
+    hostUrl: string
 }
 
-export default createContext<SettingsContext>({ serverUrl: '' })
+export default createContext<Settings>({ hostUrl: '' })

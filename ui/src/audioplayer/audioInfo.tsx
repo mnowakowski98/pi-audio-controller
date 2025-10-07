@@ -6,7 +6,7 @@ import Col from 'react-bootstrap/Col'
 import SettingsContext from '../SettingsContext'
 
 export default function AudioInfo() {
-    const baseUrl = useContext(SettingsContext).serverUrl
+    const baseUrl = useContext(SettingsContext).hostUrl
 
     const audioInfo = useQuery({
         queryKey: ['audioInfo'],

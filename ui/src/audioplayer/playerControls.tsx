@@ -12,7 +12,7 @@ interface PlayerControlsProps {
 }
 
 export default function PlayerControls(props: PlayerControlsProps) {
-    const baseUrl = useContext(SettingsContext).serverUrl
+    const baseUrl = useContext(SettingsContext).hostUrl
     const queryClient = useQueryClient()
 
     const audioStatus = useQuery({
