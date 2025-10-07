@@ -19,7 +19,7 @@ export default function AudioUploader() {
             const data = new FormData()
             data.append('file', audioFile!)
             data.append('name', audioFile!.name)
-            const response = await fetch(`${baseUrl}/file`, {
+            const response = await fetch(new URL(`./file`, baseUrl), {
                 method: 'POST',
                 body: data
             })
