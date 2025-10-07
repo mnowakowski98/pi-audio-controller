@@ -38,13 +38,19 @@ router.get('/file', async (_req, res) => res.send(getAudioInfo()))
 
 router.post('/file', upload.single('file'), async (req, res) => {
     if (req.file == null) {
-        res.sendStatus(400)
+        res.statusCode = 400
+        res.send('Missing file')
         return
     }
 
     fileName = req.body['name']
+    try { metadata = await parseBuffer(req.file.buffer) }
+    catch {
+        res.statusCode = 400
+        res.send('Must be a media file')
+        return
+    }
     await writeFile(tempFile, req.file.buffer)
-    metadata = await parseBuffer(req.file.buffer)
     res.send(getAudioInfo())
 })
 //#endregion
@@ -52,6 +58,7 @@ router.post('/file', upload.single('file'), async (req, res) => {
 //#region Audio status
 interface AudioStatus {
     playing: boolean,
+    paused: boolean,
     loop: boolean,
     volume: number
 }
@@ -60,11 +67,13 @@ let speaker: Speaker | null = null
 let audio: Stream.Readable | null = null
 
 let playing = () => speaker?.closed == false
+let paused = () => playing() == false && audio != null
 let volume = 50
 let loop = false
 
 const getAudioStatus = (): AudioStatus => ({
     playing: playing(),
+    paused: paused(),
     loop,
     volume
 })
@@ -82,15 +91,16 @@ const getSpeakerSettings = (): Speaker.Options  => {
     }
 }
 
+let overrideLoop = false
 const audioEnd = () => {
-    speaker?.close(true)
+    const doLoop = loop == true && overrideLoop == false
+    speaker?.close(doLoop)
     audio?.unpipe()
     audio?.destroy()
-    if (loop == true) {
+    if (doLoop) {
+        overrideLoop = false
         speaker = new Speaker(getSpeakerSettings())
-        audio = createReadStream(tempFile, {
-            start: 44
-        })
+        audio = createReadStream(tempFile)
         audio.pipe(speaker)
         audio.addListener('end', audioEnd)
         return
@@ -110,22 +120,15 @@ router.put('/status/playing', express.text(), (req, res) => {
     switch(req.body) {
         case 'start':
             if(speaker == null) speaker = new Speaker(getSpeakerSettings())
-            if(audio == null) audio = createReadStream(tempFile, {
-                start: 44
-            })
+            if(audio == null) audio = createReadStream(tempFile)
             audio.pipe(speaker)
             audio.addListener('end', audioEnd)
             break
         case 'stop':
-            audio?.removeListener('end', audioEnd)
-            audio?.unpipe()
-            speaker?.close(false)
-            audio?.destroy()
-            speaker = null
-            audio = null
+            overrideLoop = true
+            audio?.emit('end')
             break
         case 'pause':
-            audio?.removeListener('end', audioEnd)
             audio?.unpipe()
             speaker?.close(false)
             speaker = null

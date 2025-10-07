@@ -1,0 +1,42 @@
+import { useContext, useState, type ChangeEvent } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+import Form from 'react-bootstrap/Form'
+import InputGroup from 'react-bootstrap/InputGroup'
+import Button from 'react-bootstrap/Button'
+
+import SettingsContext from '../SettingsContext'
+
+interface AudioUploaderProps {
+    onFileUpload: () => void
+}
+
+export default function AudioUploader(props: AudioUploaderProps) {
+    const baseUrl = useContext(SettingsContext).serverUrl
+    const queryClient = useQueryClient()
+
+    const [audioFile, setAudioFile] = useState<File | null>()
+
+    const postFile = useMutation({
+        mutationFn: async () => {
+            const data = new FormData()
+            data.append('file', audioFile!)
+            data.append('name', audioFile!.name)
+            const response = await fetch(`${baseUrl}/file`, {
+                method: 'POST',
+                body: data
+            })
+            return await response.json()
+        },
+        onSuccess: (data) => {
+            queryClient.setQueryData(['audioInfo'], data)
+            props.onFileUpload()
+        }
+    })
+
+    return <InputGroup>
+        <InputGroup.Text>Upload audio</InputGroup.Text>
+        <Form.Control type='file' onChange={(event: ChangeEvent<HTMLInputElement>) => setAudioFile(event.target.files?.item(0))} />
+        <Button type='button' onClick={() => postFile.mutate()}>Submit</Button>
+    </InputGroup>
+}
