@@ -5,9 +5,9 @@ import SettingsContext from "../SettingsContext"
 
 export const audioInfoQueryKey = 'audioInfo'
 
-export default function useAudioInfo(urlOverride?: URL) {
+export default function useAudioInfo() {
     const baseUrl = useContext(SettingsContext).hostUrl
-    const queryUrl = new URL('./file', urlOverride ?? baseUrl)
+    const queryUrl = new URL('./file', baseUrl)
 
     return useQuery({
         queryKey: [audioInfoQueryKey],

@@ -6,9 +6,9 @@ import Container from 'react-bootstrap/Container'
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 
-import AudioPlayer from './audioplayer/audioPlayer'
 import Settings from './settings/settings'
 import SettingsContext, { type Settings as SettingsType } from './SettingsContext'
+import AudioPlayerContext from './audioplayer/audioPlayerContext';
 
 export default function App() {
   const settingsString = localStorage.getItem('settings')
@@ -51,7 +51,7 @@ export default function App() {
       {settingsComponent}
     </>}
     {ready && <Routes>
-      <Route index path='/player' element={<AudioPlayer />} />
+      <Route index path='/player' element={<AudioPlayerContext />} />
       <Route path='/settings' element={settingsComponent} />
     </Routes>}
   </SettingsContext>
