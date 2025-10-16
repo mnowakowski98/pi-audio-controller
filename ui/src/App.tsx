@@ -34,7 +34,7 @@ export default function App() {
   }} />
 
   return <SettingsContext value={settings}>
-    <Navbar className='bg-primary'>
+    <Navbar className='bg-primary mb-3'>
       <Container>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
@@ -51,8 +51,8 @@ export default function App() {
       {settingsComponent}
     </>}
     {ready && <Routes>
-      <Route index path='/player' element={<AudioPlayerContext />} />
-      <Route path='/settings' element={settingsComponent} />
+      <Route path='player' element={<AudioPlayerContext />} />
+      <Route path='settings' element={settingsComponent} />
     </Routes>}
   </SettingsContext>
 }

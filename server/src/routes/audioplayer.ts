@@ -1,21 +1,39 @@
 import { createReadStream, writeFileSync } from 'node:fs'
-import { writeFile } from 'node:fs/promises'
+import { copyFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { exec as execFunc } from 'node:child_process'
+import { promisify } from 'node:util'
+import findExec from 'find-exec'
 
-// Init temp file for audio
-const tempFile = join(tmpdir(), '/audioplayer-playing')
-writeFileSync(tempFile, '')
-console.debug(`Audio player: Using audio file path ${tempFile}`)
+// Init temp files for audio
+const originalFile = join(tmpdir(), '/audioplayer-original')
+const playingFile = join(tmpdir(), '/audioplayer-playing')
+writeFileSync(originalFile, '')
+writeFileSync(playingFile, '')
+
+const exec = promisify(execFunc)
+const ffmpeg = findExec('ffmpeg')
+if (ffmpeg == null) console.error('ffmpeg not found')
 
 import express from 'express'
 import multer from 'multer'
+
 import Speaker from 'speaker'
 import { IAudioMetadata, parseBuffer } from 'music-metadata'
 import Stream from 'node:stream'
 
 const router = express.Router()
 const upload = multer()
+
+let speaker: Speaker | null = null
+let audio: Stream.Readable | null = null
+
+let playing = () => speaker?.closed == false
+let paused = () => playing() == false && audio != null
+let volume = 50
+let loop = false
+let overrideLoop = false
 
 //#region File info
 interface AudioFileInfo {
@@ -35,8 +53,10 @@ const getAudioInfo = (): AudioFileInfo => ({
 })
 
 router.get('/file', async (_req, res) => res.send(getAudioInfo()))
-
 router.post('/file', upload.single('file'), async (req, res) => {
+    overrideLoop = true
+    audio?.emit('end')
+
     if (req.file == null) {
         res.statusCode = 400
         res.send('Missing file')
@@ -50,7 +70,11 @@ router.post('/file', upload.single('file'), async (req, res) => {
         res.send('Must be a media file')
         return
     }
-    await writeFile(tempFile, req.file.buffer)
+    await writeFile(originalFile, req.file.buffer)
+
+    if (ffmpeg != null) await exec(`${ffmpeg} -i ${originalFile} -y -f s16le -acodec pcm_s16le ${playingFile}`)
+    else await copyFile(originalFile, playingFile)
+
     res.send(getAudioInfo())
 })
 //#endregion
@@ -62,14 +86,6 @@ interface AudioStatus {
     loop: boolean,
     volume: number
 }
-
-let speaker: Speaker | null = null
-let audio: Stream.Readable | null = null
-
-let playing = () => speaker?.closed == false
-let paused = () => playing() == false && audio != null
-let volume = 50
-let loop = false
 
 const getAudioStatus = (): AudioStatus => ({
     playing: playing(),
@@ -91,16 +107,15 @@ const getSpeakerSettings = (): Speaker.Options  => {
     }
 }
 
-let overrideLoop = false
 const audioEnd = () => {
     const doLoop = loop == true && overrideLoop == false
+    overrideLoop = false
     speaker?.close(doLoop)
     audio?.unpipe()
     audio?.destroy()
     if (doLoop) {
-        overrideLoop = false
         speaker = new Speaker(getSpeakerSettings())
-        audio = createReadStream(tempFile)
+        audio = createReadStream(playingFile)
         audio.pipe(speaker)
         audio.addListener('end', audioEnd)
         return
@@ -119,8 +134,9 @@ router.put('/status/playing', express.text(), (req, res) => {
 
     switch(req.body) {
         case 'start':
+            if(playing() == true) break;
             if(speaker == null) speaker = new Speaker(getSpeakerSettings())
-            if(audio == null) audio = createReadStream(tempFile)
+            if(audio == null) audio = createReadStream(playingFile)
             audio.pipe(speaker)
             audio.addListener('end', audioEnd)
             break
@@ -129,6 +145,7 @@ router.put('/status/playing', express.text(), (req, res) => {
             audio?.emit('end')
             break
         case 'pause':
+            audio?.removeListener('end', audioEnd)
             audio?.unpipe()
             speaker?.close(false)
             speaker = null

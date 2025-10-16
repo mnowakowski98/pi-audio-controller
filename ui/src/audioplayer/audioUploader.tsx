@@ -30,7 +30,11 @@ export default function AudioUploader() {
 
     return <InputGroup>
         <InputGroup.Text>Upload audio</InputGroup.Text>
-        <Form.Control type='file' onChange={(event: ChangeEvent<HTMLInputElement>) => setAudioFile(event.target.files?.item(0))} />
-        <Button type='button' onClick={() => postFile.mutate()}>Submit</Button>
+        <Form.Control
+            type='file'
+            disabled={postFile.isPending}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setAudioFile(event.target.files?.item(0))}
+        />
+        <Button type='button' disabled={postFile.isPending} onClick={() => postFile.mutate()}>Submit</Button>
     </InputGroup>
 }
