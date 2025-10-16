@@ -26,7 +26,7 @@ export default function App() {
 
   const ready = isValidHost.isError == false
     && isValidHost.isLoading == false
-    && isValidHost.data == 'pi-audio-controller-server'
+    && isValidHost.data == 'remote-audio-controller-server'
 
   const settingsComponent = <Settings onUpdate={(newSettings) => {
     setSettings(newSettings)
