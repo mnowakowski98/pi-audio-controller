@@ -22,6 +22,7 @@ import multer from 'multer'
 import Speaker from 'speaker'
 import { IAudioMetadata, parseBuffer } from 'music-metadata'
 import Stream from 'node:stream'
+import AudioFileInfo from '../models/audioFileInfo'
 
 const router = express.Router()
 const upload = multer()
@@ -36,13 +37,6 @@ let loop = false
 let overrideLoop = false
 
 //#region File info
-interface AudioFileInfo {
-    fileName: string | null,
-    title: string | null,
-    artist: string | null,
-    duration: number | null
-}
-
 let fileName: string | null = null
 let metadata: IAudioMetadata | null = null
 const getAudioInfo = (): AudioFileInfo => ({
