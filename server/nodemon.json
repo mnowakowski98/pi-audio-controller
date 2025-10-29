@@ -2,6 +2,6 @@
     "ignore": ["dist/", "sounds/"],
     "ext": "ts, tsx",
     "events": {
-        "start": "cp -r ./src/models/ ../ui/src/models/"
+        "start": "rm -r ../ui/src/models/ && cp -r ./src/models/ ../ui/src/models/"
     }
 }
