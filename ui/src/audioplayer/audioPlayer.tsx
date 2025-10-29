@@ -10,7 +10,7 @@ import useAudioInfo from './useAudioInfo'
 
 export default function AudioPlayer() {
     const audioInfo = useAudioInfo()
-    const hasFile = audioInfo.isLoading == false && audioInfo.data.fileName != null
+    const hasFile = audioInfo.isLoading == false && audioInfo.data?.fileName != null
 
     return <Container fluid>
         <Row className='mt-3 mb-2'>

@@ -74,12 +74,7 @@ router.post('/file', upload.single('file'), async (req, res) => {
 //#endregion
 
 //#region Audio status
-interface AudioStatus {
-    playing: boolean,
-    paused: boolean,
-    loop: boolean,
-    volume: number
-}
+import AudioStatus from '../models/audioStatus'
 
 const getAudioStatus = (): AudioStatus => ({
     playing: playing(),

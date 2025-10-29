@@ -1,7 +1,8 @@
-import { useContext } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useContext } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
-import SettingsContext from "../SettingsContext"
+import SettingsContext from '../settingsContext'
+import type AudioFileInfo from '../models/audioFileInfo'
 
 export const audioInfoQueryKey = 'audioInfo'
 
@@ -9,7 +10,7 @@ export default function useAudioInfo() {
     const baseUrl = useContext(SettingsContext).hostUrl
     const queryUrl = new URL('./file', baseUrl)
 
-    return useQuery({
+    return useQuery<AudioFileInfo>({
         queryKey: [audioInfoQueryKey],
         queryFn: async () => {
             const data = await fetch(queryUrl)

@@ -6,7 +6,7 @@ export default function AudioInfo() {
     const audioInfo = useAudioInfo()
 
     if (audioInfo.isLoading) return 'Loading'
-    if (audioInfo.isError) return 'Goofed'
+    if (audioInfo.isError || audioInfo.data == null) return 'Goofed'
 
     return <>
         <Col className='text-center'>{audioInfo.data.fileName ?? 'No file'}</Col>

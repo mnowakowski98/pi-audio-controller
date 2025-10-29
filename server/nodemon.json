@@ -1,0 +1,7 @@
+{
+    "ignore": ["dist/", "sounds/"],
+    "ext": "ts, tsx",
+    "events": {
+        "start": "cp -r ./src/models/ ../ui/src/models/"
+    }
+}

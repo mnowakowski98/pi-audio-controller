@@ -18,12 +18,16 @@ catch { throw `Fatal: Can't access sound folder: ${soundFolder}` }
 const getSoundFiles = async (): Promise<AudioFileInfo[]> => {
     const files = await readdir(soundFolder)
     const metadatas = await Promise.all(files.map(file => parseFile(join(soundFolder, file))))
-    return metadatas.map((metadata, index) => ({
-        fileName: files.at(index) ?? 'No file name (this is an error)',
-        title: metadata.common.title ?? 'No title',
-        artist: metadata.common.artist ?? 'No artist',
-        duration: metadata.format.duration ?? 0
-    }))
+    return metadatas.map((metadata, index) => {
+        const fileName = files.at(index)
+        if (fileName == undefined) throw 'Sound file metadata is out of range'
+        return {
+            fileName,
+            title: metadata.common.title ?? 'No title',
+            artist: metadata.common.artist ?? 'No artist',
+            duration: metadata.format.duration ?? 0
+        }
+    })
 }
 router.get('/', async (_req, res) => res.send(await getSoundFiles()))
 
@@ -34,14 +38,14 @@ router.post('/', upload.single('file'), async (req, res) => {
         return
     }
 
-    try { const metadata = await parseBuffer(req.file.buffer) }
+    try { await parseBuffer(req.file.buffer) }
     catch {
         res.statusCode = 400
         res.send('File must be an audio file')
         return
     }
 
-    await writeFile(join(soundFolder, req.file.filename), req.file.buffer)
+    await writeFile(join(soundFolder, req.body['name']), req.file.buffer)
     res.send(await getSoundFiles())
 })
 
