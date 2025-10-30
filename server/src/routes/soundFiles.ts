@@ -1,33 +1,57 @@
 import express from 'express'
 import multer from 'multer'
-import { parseBuffer } from 'music-metadata'
-import { accessSync, existsSync, mkdirSync } from 'node:fs'
-import { readdir, writeFile } from 'node:fs/promises'
+
+import { accessSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { DatabaseSync } from 'node:sqlite'
+
+import { parseFile, parseBuffer, IAudioMetadata } from 'music-metadata'
+
 import AudioFileInfo from '../models/audioFileInfo'
-import { parseFile } from 'music-metadata'
+import { AudioFileInfo as AudioFileInfoDTO } from '../dtos/audioFileInfo'
 
 const router = express.Router()
 const upload = multer()
 
-const soundFolder = join(process.cwd(), '/sounds')
-if(existsSync(soundFolder) == false) mkdirSync(soundFolder)
-try { accessSync(soundFolder) }
-catch { throw `Fatal: Can't access sound folder: ${soundFolder}` }
+export const soundsFolder = join(process.cwd(), '/sounds')
+if(existsSync(soundsFolder) == false) mkdirSync(soundsFolder)
+try { accessSync(soundsFolder) }
+catch { throw `Fatal: Can't access sound folder: ${soundsFolder}` }
+
+const soundsDatabase = new DatabaseSync(':memory:')
+soundsDatabase.exec('create table SoundFiles \
+    (Id integer primary key, \
+    FileName nvarchar not null, \
+    Title nvarchar, \
+    Artist nvarchar, \
+    Duration integer)')
+
+const getInfoFromMetadata = (metadata: IAudioMetadata, fileName: string) => ({
+    fileName,
+    title: metadata.common.title ?? 'No title',
+    artist: metadata.common.artist ?? 'No artist',
+    duration: metadata.format.duration ?? 0
+}) 
+
+const existingFiles = readdirSync(soundsFolder)
+for (const file of existingFiles) {
+    const fullPath = join(soundsFolder, file)
+    parseFile(fullPath).then(metadata => {
+        const dto = new AudioFileInfoDTO(getInfoFromMetadata(metadata, file), soundsDatabase)
+        dto.insert()
+    })
+}
 
 const getSoundFiles = async (): Promise<AudioFileInfo[]> => {
-    const files = await readdir(soundFolder)
-    const metadatas = await Promise.all(files.map(file => parseFile(join(soundFolder, file))))
-    return metadatas.map((metadata, index) => {
-        const fileName = files.at(index)
-        if (fileName == undefined) throw 'Sound file metadata is out of range'
-        return {
-            fileName,
-            title: metadata.common.title ?? 'No title',
-            artist: metadata.common.artist ?? 'No artist',
-            duration: metadata.format.duration ?? 0
-        }
-    })
+    const statement = soundsDatabase.prepare('select * from SoundFiles')
+    const results = statement.all()
+    console.log(results)
+    return results.map<AudioFileInfo>(result => ({
+        fileName: result['FileName']?.toString() ?? 'Init goofed',
+        title: result['Title']?.toString() ?? 'Init goofed',
+        artist: result['Artist']?.toString() ?? 'Init goofed',
+        duration: parseInt(result['Duration']?.toString() ?? '0')
+    }))
 }
 router.get('/', async (_req, res) => res.send(await getSoundFiles()))
 
@@ -38,15 +62,27 @@ router.post('/', upload.single('file'), async (req, res) => {
         return
     }
 
-    try { await parseBuffer(req.file.buffer) }
+    let metadata: IAudioMetadata | null = null;
+    try { metadata = await parseBuffer(req.file.buffer) }
     catch {
         res.statusCode = 400
         res.send('File must be an audio file')
         return
     }
 
-    await writeFile(join(soundFolder, req.body['name']), req.file.buffer)
+    const dto = new AudioFileInfoDTO(getInfoFromMetadata(metadata, req.body['name']), soundsDatabase)
+    const didInsert = await dto.insert(req.file.buffer)
+    if (didInsert == false) throw 'Failed to update file list'
+
     res.send(await getSoundFiles())
+})
+
+router.delete('/:id', async (req, res) => {
+    if (req.params.id == null) {
+        res.statusCode = 400
+        res.send('Id param can not be null')
+    }
+
 })
 
 export default router

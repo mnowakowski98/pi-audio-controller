@@ -1,7 +1,8 @@
 import { useContext } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
 import Table from 'react-bootstrap/Table'
+import Button from 'react-bootstrap/Button'
 
 import settingsContext from '../settingsContext'
 import type AudioFileInfo from '../models/audioFileInfo'
@@ -14,6 +15,13 @@ export default function FilesTable() {
         queryFn: async () => {
             const data = await fetch(baseUrl)
             return await data.json()
+        }
+    })
+
+    const removeFile = useMutation({
+        mutationFn: async (id: number) => {
+            const response = await fetch(new URL(`./${id}`, baseUrl), { method: 'Delete' })
+            return response.json()
         }
     })
 
@@ -36,6 +44,12 @@ export default function FilesTable() {
                     <td>{file.title}</td>
                     <td>{file.artist}</td>
                     <td>{file.duration?.toFixed(2)}</td>
+                    <td>
+                        <Button
+                            type='button'
+                            onClick={() => removeFile.mutate(0)}
+                        >X</Button>
+                    </td>
                 </tr>
             )}
         </tbody>
