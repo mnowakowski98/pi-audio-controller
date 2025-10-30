@@ -24,9 +24,10 @@ soundsDatabase.exec('create table SoundFiles \
     FileName nvarchar not null, \
     Title nvarchar, \
     Artist nvarchar, \
-    Duration integer)')
+    Duration decimal)')
 
-const getInfoFromMetadata = (metadata: IAudioMetadata, fileName: string) => ({
+const getInfoFromMetadata = (metadata: IAudioMetadata, fileName: string, id?: number) => ({
+    id: id ?? 0,
     fileName,
     title: metadata.common.title ?? 'No title',
     artist: metadata.common.artist ?? 'No artist',
@@ -37,7 +38,7 @@ const existingFiles = readdirSync(soundsFolder)
 for (const file of existingFiles) {
     const fullPath = join(soundsFolder, file)
     parseFile(fullPath).then(metadata => {
-        const dto = new AudioFileInfoDTO(getInfoFromMetadata(metadata, file), soundsDatabase)
+        const dto = new AudioFileInfoDTO(soundsDatabase, getInfoFromMetadata(metadata, file))
         dto.insert()
     })
 }
@@ -45,15 +46,27 @@ for (const file of existingFiles) {
 const getSoundFiles = async (): Promise<AudioFileInfo[]> => {
     const statement = soundsDatabase.prepare('select * from SoundFiles')
     const results = statement.all()
-    console.log(results)
     return results.map<AudioFileInfo>(result => ({
+        id: parseInt(result['Id']?.toString() ?? '0'),
         fileName: result['FileName']?.toString() ?? 'Init goofed',
         title: result['Title']?.toString() ?? 'Init goofed',
         artist: result['Artist']?.toString() ?? 'Init goofed',
-        duration: parseInt(result['Duration']?.toString() ?? '0')
+        duration: parseFloat(result['Duration']?.toString() ?? '0')
     }))
 }
+
 router.get('/', async (_req, res) => res.send(await getSoundFiles()))
+router.get('/:id', async (req, res) => {
+    const dto = new AudioFileInfoDTO(soundsDatabase)
+    dto.get(parseInt(req.params.id))
+    const fileInfo = dto.audioFileInfo
+    if (fileInfo == undefined) {
+        res.sendStatus(404)
+        return
+    }
+
+    res.send(fileInfo)
+})
 
 router.post('/', upload.single('file'), async (req, res) => {
     if (req.file == null) {
@@ -70,7 +83,7 @@ router.post('/', upload.single('file'), async (req, res) => {
         return
     }
 
-    const dto = new AudioFileInfoDTO(getInfoFromMetadata(metadata, req.body['name']), soundsDatabase)
+    const dto = new AudioFileInfoDTO(soundsDatabase, getInfoFromMetadata(metadata, req.body['name']))
     const didInsert = await dto.insert(req.file.buffer)
     if (didInsert == false) throw 'Failed to update file list'
 
@@ -83,6 +96,10 @@ router.delete('/:id', async (req, res) => {
         res.send('Id param can not be null')
     }
 
+    const dto = new AudioFileInfoDTO(soundsDatabase)
+    await dto.delete(parseInt(req.params.id))
+
+    res.send(await getSoundFiles())
 })
 
 export default router

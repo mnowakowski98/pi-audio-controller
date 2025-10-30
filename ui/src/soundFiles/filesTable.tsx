@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
@@ -9,6 +9,7 @@ import type AudioFileInfo from '../models/audioFileInfo'
 
 export default function FilesTable() {
     const baseUrl = useContext(settingsContext).hostUrl
+    const queryClient = useQueryClient()
 
     const soundFiles = useQuery<AudioFileInfo[]>({
         queryKey: ['soundFileInfo'],
@@ -22,7 +23,8 @@ export default function FilesTable() {
         mutationFn: async (id: number) => {
             const response = await fetch(new URL(`./${id}`, baseUrl), { method: 'Delete' })
             return response.json()
-        }
+        },
+        onSuccess: (data) => queryClient.setQueryData(['soundFileInfo'], data)
     })
 
     if (soundFiles.isLoading == true) return 'Loading'
@@ -38,8 +40,8 @@ export default function FilesTable() {
             </tr>
         </thead>
         <tbody>
-            {soundFiles.data?.map((file, index) =>
-                <tr key={index}>
+            {soundFiles.data?.map((file) =>
+                <tr key={file.id}>
                     <td>{file.fileName}</td>
                     <td>{file.title}</td>
                     <td>{file.artist}</td>
@@ -47,7 +49,7 @@ export default function FilesTable() {
                     <td>
                         <Button
                             type='button'
-                            onClick={() => removeFile.mutate(0)}
+                            onClick={() => removeFile.mutate(file.id)}
                         >X</Button>
                     </td>
                 </tr>
