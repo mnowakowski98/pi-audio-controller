@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 
 import AudioPlayer from './audioPlayer';
-import SettingsContext from '../SettingsContext';
+import SettingsContext from '../settingsContext';
 
 
 export default function AudioPlayerContext() {

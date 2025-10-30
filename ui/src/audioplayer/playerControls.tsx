@@ -5,7 +5,8 @@ import Form from 'react-bootstrap/Form'
 import InputGroup from 'react-bootstrap/InputGroup'
 import Button from 'react-bootstrap/Button'
 
-import SettingsContext from '../SettingsContext'
+import SettingsContext from '../settingsContext'
+import type AudioStatus from '../models/audioStatus'
 
 interface PlayerControlsProps {
     hasFile: boolean
@@ -15,7 +16,7 @@ export default function PlayerControls(props: PlayerControlsProps) {
     const baseUrl = useContext(SettingsContext).hostUrl
     const queryClient = useQueryClient()
 
-    const audioStatus = useQuery({
+    const audioStatus = useQuery<AudioStatus>({
         queryKey: ['audioStatus'],
         queryFn: async () => {
             const data = await fetch(new URL('./status', baseUrl))
@@ -44,8 +45,8 @@ export default function PlayerControls(props: PlayerControlsProps) {
     })
 
     if (audioStatus.isLoading) return 'Loading'
-    if (audioStatus.isError) return 'Goofed'
-
+    if (audioStatus.isError || audioStatus.data == null) return 'Goofed'
+    
     return <InputGroup className='justify-content-end'>
         <InputGroup.Text className={`text-light ${audioStatus.data.loop ? 'bg-success' : 'bg-secondary'}`}>
             <Form.Check reverse label='Loop' checked={audioStatus.data.loop} onChange={(event) => setLoopState.mutate(event.target.checked)} />

@@ -7,8 +7,9 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 
 import Settings from './settings/settings'
-import SettingsContext, { type Settings as SettingsType } from './SettingsContext'
-import AudioPlayerContext from './audioplayer/audioPlayerContext';
+import SettingsContext, { type Settings as SettingsType } from './settingsContext'
+import AudioPlayerContext from './audioPlayer/audioPlayerContext';
+import SoundFilesContext from './soundFiles/soundFilesContext';
 
 export default function App() {
   const settingsString = localStorage.getItem('settings')
@@ -40,6 +41,7 @@ export default function App() {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link className='text-light' href="/player">Audio Player</Nav.Link>
+            <Nav.Link className='text-light' href="/soundfiles">Sound Files</Nav.Link>
             <Nav.Link className='text-light' href="/settings">Settings</Nav.Link>
           </Nav>
         </Navbar.Collapse>
@@ -52,6 +54,7 @@ export default function App() {
     </>}
     {ready && <Routes>
       <Route path='player' element={<AudioPlayerContext />} />
+      <Route path='soundfiles' element={<SoundFilesContext />} />
       <Route path='settings' element={settingsComponent} />
     </Routes>}
   </SettingsContext>
