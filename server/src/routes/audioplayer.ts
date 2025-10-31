@@ -40,8 +40,8 @@ let overrideLoop = false
 let fileName: string | null = null
 let metadata: IAudioMetadata | null = null
 const getAudioInfo = (): AudioFileInfo => ({
-    id: -1,
-    fileName,
+    id: 'playing',
+    fileName: fileName ?? '',
     title: metadata?.common.title ?? null,
     artist: metadata?.common.artist ?? null,
     duration: metadata?.format.duration ?? null

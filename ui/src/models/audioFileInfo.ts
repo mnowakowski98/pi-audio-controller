@@ -1,6 +1,6 @@
 export default interface AudioFileInfo {
-    id: number,
-    fileName: string | null,
+    id: string,
+    fileName: string,
     title: string | null,
     artist: string | null,
     duration: number | null

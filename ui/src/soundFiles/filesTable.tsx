@@ -20,7 +20,7 @@ export default function FilesTable() {
     })
 
     const removeFile = useMutation({
-        mutationFn: async (id: number) => {
+        mutationFn: async (id: string) => {
             const response = await fetch(new URL(`./${id}`, baseUrl), { method: 'Delete' })
             return response.json()
         },
