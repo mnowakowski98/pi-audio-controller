@@ -1,14 +1,13 @@
+import { randomUUID } from 'node:crypto'
+import { accessSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
+import { rm, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+
 import express from 'express'
 import multer from 'multer'
-
-import { accessSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
-import { DatabaseSync } from 'node:sqlite'
-
 import { parseFile, parseBuffer, IAudioMetadata } from 'music-metadata'
 
 import AudioFileInfo from '../models/audioFileInfo'
-import { AudioFileInfo as AudioFileInfoDTO } from '../dtos/audioFileInfo'
 
 const router = express.Router()
 const upload = multer()
@@ -18,60 +17,62 @@ if(existsSync(soundsFolder) == false) mkdirSync(soundsFolder)
 try { accessSync(soundsFolder) }
 catch { throw `Fatal: Can't access sound folder: ${soundsFolder}` }
 
-const soundsDatabase = new DatabaseSync(':memory:')
-soundsDatabase.exec('create table SoundFiles \
-    (Id integer primary key, \
-    FileName nvarchar not null, \
-    Title nvarchar, \
-    Artist nvarchar, \
-    Duration decimal)')
-
-const getInfoFromMetadata = (metadata: IAudioMetadata, fileName: string, id?: number) => ({
-    id: id ?? 0,
-    fileName,
-    title: metadata.common.title ?? 'No title',
-    artist: metadata.common.artist ?? 'No artist',
-    duration: metadata.format.duration ?? 0
-}) 
-
-const existingFiles = readdirSync(soundsFolder)
-for (const file of existingFiles) {
-    const fullPath = join(soundsFolder, file)
-    parseFile(fullPath).then(metadata => {
-        const dto = new AudioFileInfoDTO(soundsDatabase, getInfoFromMetadata(metadata, file))
-        dto.insert()
-    })
+type SoundFile = {
+    fileInfo: AudioFileInfo,
+    metaData: IAudioMetadata
 }
 
-const getSoundFiles = async (): Promise<AudioFileInfo[]> => {
-    const statement = soundsDatabase.prepare('select * from SoundFiles')
-    const results = statement.all()
-    return results.map<AudioFileInfo>(result => ({
-        id: parseInt(result['Id']?.toString() ?? '0'),
-        fileName: result['FileName']?.toString() ?? 'Init goofed',
-        title: result['Title']?.toString() ?? 'Init goofed',
-        artist: result['Artist']?.toString() ?? 'Init goofed',
-        duration: parseFloat(result['Duration']?.toString() ?? '0')
-    }))
-}
+const soundFiles: SoundFile[] = []
+const makeSoundFile = (fileName: string, metaData: IAudioMetadata) => ({
+    fileInfo: {
+        id: randomUUID(),
+        fileName,
+        title: metaData.common.title ?? 'No title',
+        artist: metaData.common.artist ?? 'No artist',
+        duration: metaData.format.duration ?? 0
+    },
+    metaData
+})
 
-router.get('/', async (_req, res) => res.send(await getSoundFiles()))
-router.get('/:id', async (req, res) => {
-    const dto = new AudioFileInfoDTO(soundsDatabase)
-    dto.get(parseInt(req.params.id))
-    const fileInfo = dto.audioFileInfo
-    if (fileInfo == undefined) {
-        res.sendStatus(404)
+readdirSync(soundsFolder).forEach(async (fileName, id) => {
+    const fullPath = join(soundsFolder, fileName)
+    let metaData: IAudioMetadata | null = null
+    try { metaData = await parseFile(fullPath) }
+    catch { console.error(`Found invalid file: ${fileName}`) }
+    if (metaData == null) return
+    soundFiles.push(makeSoundFile(fileName, metaData))
+})
+
+const getSoundFiles = () => soundFiles.map(file => file.fileInfo)
+
+router.get('/', async (_req, res) => res.send(getSoundFiles()))
+
+router.get('/:id', (req, res) => {
+    const id = req.params.id
+    const file = getSoundFiles().find(file => file.id == id)
+    if (file == undefined) {
+        res.sendStatus(400)
         return
     }
 
-    res.send(fileInfo)
+    res.send(file)
 })
 
 router.post('/', upload.single('file'), async (req, res) => {
     if (req.file == null) {
         res.statusCode = 400
-        res.send('File can not be null')
+        res.send('file can not be null')
+        return
+    }
+
+    const fileName = req.body['name']
+    if(fileName == null) {
+        res.status(400).send('name can not be null')
+        return
+    }
+
+    if(soundFiles.find(file => file.fileInfo.fileName == fileName) != undefined) {
+        res.status(400).send('File name already exists')
         return
     }
 
@@ -83,23 +84,23 @@ router.post('/', upload.single('file'), async (req, res) => {
         return
     }
 
-    const dto = new AudioFileInfoDTO(soundsDatabase, getInfoFromMetadata(metadata, req.body['name']))
-    const didInsert = await dto.insert(req.file.buffer)
-    if (didInsert == false) throw 'Failed to update file list'
-
-    res.send(await getSoundFiles())
+    await writeFile(join(soundsFolder, fileName), req.file.buffer)
+    soundFiles.push(makeSoundFile(fileName, metadata))
+    res.send(getSoundFiles())
 })
 
 router.delete('/:id', async (req, res) => {
-    if (req.params.id == null) {
-        res.statusCode = 400
-        res.send('Id param can not be null')
+    const id = req.params.id
+    const file = soundFiles.find(file => file.fileInfo.id == id)
+    if (file == undefined) {
+        res.sendStatus(400)
+        return
     }
 
-    const dto = new AudioFileInfoDTO(soundsDatabase)
-    await dto.delete(parseInt(req.params.id))
-
-    res.send(await getSoundFiles())
+    const index = soundFiles.indexOf(file)
+    await rm(join(soundsFolder, file.fileInfo.fileName))
+    soundFiles.splice(index, 1)
+    res.send(getSoundFiles())
 })
 
 export default router
