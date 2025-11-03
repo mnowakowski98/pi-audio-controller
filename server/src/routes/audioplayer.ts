@@ -133,9 +133,9 @@ router.put('/status/playing', express.text(), (req, res) => {
         case 'stop':
             overrideLoop = true
             audio?.emit('end')
+            audio?.removeListener('end', audioEnd)
             break
         case 'pause':
-            audio?.removeListener('end', audioEnd)
             audio?.unpipe()
             speaker?.close(false)
             speaker = null
