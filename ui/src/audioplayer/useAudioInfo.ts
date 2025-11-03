@@ -7,8 +7,7 @@ import type AudioFileInfo from '../models/audioFileInfo'
 export const audioInfoQueryKey = 'soundFileInfo'
 
 export default function useAudioInfo() {
-    const baseUrl = useContext(SettingsContext).hostUrl
-    const queryUrl = new URL('./file', baseUrl)
+    const queryUrl = useContext(SettingsContext).hostUrl
 
     return useQuery<AudioFileInfo>({
         queryKey: [audioInfoQueryKey],

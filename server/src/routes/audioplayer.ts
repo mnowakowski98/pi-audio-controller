@@ -12,15 +12,15 @@ import {
     setLoop,
     startAudio,
     stopAudio
-} from '../repositories/audioStatus'
+} from '../repositories/audioPlayer'
 
 const router = express.Router()
 const upload = multer()
 
 //#region File info
-router.get('/file', (_req, res) => res.send(getAudioInfo()))
+router.get('/', (_req, res) => res.send(getAudioInfo()))
 
-router.post('/file', upload.single('file'), async (req, res) => {
+router.post('/', upload.single('file'), async (req, res) => {
     stopAudio()
 
     let metadata: IAudioMetadata | null = null
@@ -41,7 +41,7 @@ router.post('/file', upload.single('file'), async (req, res) => {
         return
     }
 
-    await setFile(metadata, req.file.buffer)
+    await setFile(req.body['name'], metadata, req.file.buffer)
     res.send(getAudioInfo())
 })
 //#endregion

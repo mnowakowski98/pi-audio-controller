@@ -6,9 +6,6 @@ import AudioInfo from './audioInfo'
 import PlayerControls from './playerControls'
 
 import useAudioInfo from './useAudioInfo'
-import SettingsContext from '../settingsContext'
-import { useContext } from 'react'
-import settingsContext from '../settingsContext'
 import FileUploader from '../soundFiles/fileUploader'
 
 export default function AudioPlayer() {
@@ -18,9 +15,7 @@ export default function AudioPlayer() {
     return <Container fluid>
         <Row className='mt-3 mb-2'>
             <Col xs={9}>
-                <SettingsContext value={{ hostUrl: new URL('./file', useContext(settingsContext).hostUrl) }}>
-                    <FileUploader />
-                </SettingsContext>
+                <FileUploader />
             </Col>
             <Col>
                 <PlayerControls hasFile={hasFile} />
