@@ -6,17 +6,22 @@ import Button from 'react-bootstrap/Button'
 
 import settingsContext from '../settingsContext'
 import type AudioFileInfo from '../models/audioFileInfo'
+import { soundFileInfoKey } from '../models/soundFile'
 
-export default function FilesTable() {
+interface FilesTableProps {
+    showDeleteButtons?: boolean,
+    baseUrlOverride?: URL,
+    selectedFileId?: string | null,
+    onSelect?: (id: string) => void
+}
+
+export default function FilesTable(props: FilesTableProps) {
     const baseUrl = useContext(settingsContext).hostUrl
     const queryClient = useQueryClient()
 
     const soundFiles = useQuery<AudioFileInfo[]>({
-        queryKey: ['soundFileInfo'],
-        queryFn: async () => {
-            const data = await fetch(baseUrl)
-            return await data.json()
-        }
+        queryKey: [soundFileInfoKey],
+        queryFn: async () => (await fetch(props.baseUrlOverride ?? baseUrl)).json()
     })
 
     const removeFile = useMutation({
@@ -24,7 +29,7 @@ export default function FilesTable() {
             const response = await fetch(new URL(`./${id}`, baseUrl), { method: 'Delete' })
             return response.json()
         },
-        onSuccess: (data) => queryClient.setQueryData(['soundFileInfo'], data)
+        onSuccess: (data) => queryClient.setQueryData([soundFileInfoKey], data)
     })
 
     if (soundFiles.isLoading == true) return 'Loading'
@@ -41,17 +46,21 @@ export default function FilesTable() {
         </thead>
         <tbody>
             {soundFiles.data?.map((file) =>
-                <tr key={file.id}>
+                <tr key={file.id}
+                    onClick={() => {
+                        if(props.onSelect != undefined) props.onSelect(file.id)
+                    }}
+                    className={props.selectedFileId == file.id ? 'table-primary' : undefined}>
                     <td>{file.fileName}</td>
                     <td>{file.title}</td>
                     <td>{file.artist}</td>
                     <td>{file.duration?.toFixed(2)}</td>
-                    <td>
+                    {props.showDeleteButtons && <td>
                         <Button
                             type='button'
                             onClick={() => removeFile.mutate(file.id)}
                         >X</Button>
-                    </td>
+                    </td>}
                 </tr>
             )}
         </tbody>

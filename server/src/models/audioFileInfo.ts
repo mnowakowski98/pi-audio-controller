@@ -5,3 +5,5 @@ export default interface AudioFileInfo {
     artist: string | null,
     duration: number | null
 }
+
+export const audioFileInfoKey = 'audioFileInfo'

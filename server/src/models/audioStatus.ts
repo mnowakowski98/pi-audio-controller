@@ -4,3 +4,5 @@ export default interface AudioStatus {
     loop: boolean,
     volume: number
 }
+
+export const audioStatusKey = 'audioStatus'
