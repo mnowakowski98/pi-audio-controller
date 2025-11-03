@@ -35,6 +35,7 @@ export default function FileUploader() {
         <Form.Control
             ref={fileInput}
             type='file'
+            disabled={uploadFile.isPending}
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setAudioFile(event.target.files?.item(0))}
         />

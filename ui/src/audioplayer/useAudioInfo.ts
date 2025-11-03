@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import SettingsContext from '../settingsContext'
 import type AudioFileInfo from '../models/audioFileInfo'
 
-export const audioInfoQueryKey = 'audioInfo'
+export const audioInfoQueryKey = 'soundFileInfo'
 
 export default function useAudioInfo() {
     const baseUrl = useContext(SettingsContext).hostUrl
