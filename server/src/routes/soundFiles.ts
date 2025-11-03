@@ -46,7 +46,7 @@ router.post('/', upload.single('file'), async (req, res) => {
         return
     }
     
-    addSoundFile(makeSoundFile(fileName, metadata), req.file.buffer)
+    await addSoundFile(makeSoundFile(fileName, metadata), req.file.buffer)
     res.send(getAudioInfos())
 })
 
@@ -58,7 +58,7 @@ router.delete('/:id', async (req, res) => {
         return
     }
 
-    removeSoundFile(file)
+    await removeSoundFile(file)
     res.send(getAudioInfos())
 })
 
