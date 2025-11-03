@@ -1,4 +1,4 @@
-import { type ChangeEvent, useContext, useRef, useState } from 'react'
+import { type ChangeEvent, type ReactElement, useContext, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import InputGroup from 'react-bootstrap/InputGroup'
@@ -6,7 +6,7 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import settingsContext from '../settingsContext'
 
-export default function FileUploader() {
+export default function FileUploader(props: { children?: ReactElement }) {
     const uploadUrl = useContext(settingsContext).hostUrl
     const queryClient = useQueryClient()
 
@@ -44,5 +44,6 @@ export default function FileUploader() {
             disabled={audioFile == null || uploadFile.isPending == true}
             onClick={() => uploadFile.mutate()}
         >Upload</Button>
+        {props.children}
     </InputGroup>
 }

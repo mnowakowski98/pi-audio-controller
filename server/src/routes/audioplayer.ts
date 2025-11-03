@@ -13,6 +13,7 @@ import {
     startAudio,
     stopAudio
 } from '../repositories/audioPlayer'
+import { getFile, getFileBuffer } from '../repositories/soundFiles'
 
 const router = express.Router()
 const upload = multer()
@@ -42,6 +43,17 @@ router.post('/', upload.single('file'), async (req, res) => {
     }
 
     await setFile(req.body['name'], metadata, req.file.buffer)
+    res.send(getAudioInfo())
+})
+
+router.post('/:id', async (req, res) => {
+    const file = getFile(req.params.id)
+    if (file == undefined) {
+        res.sendStatus(404)
+        return
+    }
+
+    await setFile(file.fileInfo.fileName, file.metadata, await getFileBuffer(file))
     res.send(getAudioInfo())
 })
 //#endregion

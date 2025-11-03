@@ -16,28 +16,28 @@ const soundFiles: SoundFile[] = []
 
 readdirSync(soundsFolder).forEach(async (fileName, id) => {
     const fullPath = join(soundsFolder, fileName)
-    let metaData: IAudioMetadata | null = null
-    try { metaData = await parseFile(fullPath) }
+    let metadata: IAudioMetadata | null = null
+    try { metadata = await parseFile(fullPath) }
     catch { console.error(`Found invalid file: ${fileName}`) }
-    if (metaData == null) return
-    addSoundFile(makeSoundFile(fileName, metaData))
+    if (metadata == null) return
+    addSoundFile(makeSoundFile(fileName, metadata))
 })
 
 export const getFile = (id: string) => soundFiles.find(file => file.fileInfo.id == id)
-export const getFileBuffer = async (id: string) => await readFile(join(soundsFolder, getFile(id)!.fileInfo.fileName))
+export const getFileBuffer = async (file: SoundFile) => await readFile(join(soundsFolder,file.fileInfo.fileName))
 
 export const getAudioInfos = () => soundFiles.map(file => file.fileInfo)
 export const fileNameExists = (fileName: string) => soundFiles.find(file => file.fileInfo.fileName == fileName) != undefined
 
-export const makeSoundFile = (fileName: string, metaData: IAudioMetadata) => ({
+export const makeSoundFile = (fileName: string, metadata: IAudioMetadata) => ({
     fileInfo: {
         id: randomUUID(),
         fileName,
-        title: metaData.common.title ?? 'No title',
-        artist: metaData.common.artist ?? 'No artist',
-        duration: metaData.format.duration ?? 0
+        title: metadata.common.title ?? 'No title',
+        artist: metadata.common.artist ?? 'No artist',
+        duration: metadata.format.duration ?? 0
     },
-    metaData
+    metadata
 })
 
 export const addSoundFile = async (file: SoundFile, buffer?: Buffer) => {

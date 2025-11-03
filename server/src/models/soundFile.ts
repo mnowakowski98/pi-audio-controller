@@ -4,5 +4,7 @@ import AudioFileInfo from './audioFileInfo'
 
 export default interface SoundFile {
     fileInfo: AudioFileInfo,
-    metaData: IAudioMetadata
+    metadata: IAudioMetadata
 }
+
+export const soundFileInfoKey = 'soundFileInfo'
