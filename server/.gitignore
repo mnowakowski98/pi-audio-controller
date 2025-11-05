@@ -1,6 +1,6 @@
 dist/
 node_modules/
 .DS_Store
-remote-audio-controller-server*
+remote-audio-controller-server*.tgz
 
 **/sounds/
