@@ -7,6 +7,7 @@ import Button from 'react-bootstrap/Button'
 
 import SettingsContext from '../settingsContext'
 import type AudioStatus from '../models/audioStatus'
+import { audioStatusKey } from '../models/audioStatus'
 
 interface PlayerControlsProps {
     hasFile: boolean
@@ -17,11 +18,8 @@ export default function PlayerControls(props: PlayerControlsProps) {
     const queryClient = useQueryClient()
 
     const audioStatus = useQuery<AudioStatus>({
-        queryKey: ['audioStatus'],
-        queryFn: async () => {
-            const data = await fetch(new URL('./status', baseUrl))
-            return data.json()
-        }
+        queryKey: [audioStatusKey],
+        queryFn: async () => (await fetch(new URL('./status', baseUrl))).json()
     })
 
     const setPlayingState = useMutation({
@@ -41,7 +39,7 @@ export default function PlayerControls(props: PlayerControlsProps) {
             })
             return response.json()
         },
-        onSuccess: (data) => queryClient.setQueryData(['audioStatus'], data)
+        onSuccess: (data) => queryClient.setQueryData([audioStatus], data)
     })
 
     if (audioStatus.isLoading) return 'Loading'

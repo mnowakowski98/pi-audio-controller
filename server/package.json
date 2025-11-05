@@ -1,12 +1,13 @@
 {
   "name": "remote-audio-controller-server",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "A server that plays audio on the server",
   "private": true,
   "main": "dist/index.js",
   "scripts": {
     "dev": "npx nodemon -e ts src/index.ts",
     "build": "npx tsc && rm -r ../ui/src/models/ && cp -r ./src/models/ ../ui/src/models/",
+    "package": "tar -cvf remote-audio-controller-server package.json dist/* && gzip -S .tgz remote-audio-controller-server",
     "start": "node dist/index.js"
   },
   "author": "Matt Nowakowski",
