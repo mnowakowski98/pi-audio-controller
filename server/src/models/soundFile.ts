@@ -1,6 +1,6 @@
-import { IAudioMetadata } from 'music-metadata'
+import { type IAudioMetadata } from 'music-metadata'
 
-import AudioFileInfo from './audioFileInfo'
+import type AudioFileInfo from './audioFileInfo'
 
 export default interface SoundFile {
     fileInfo: AudioFileInfo,
