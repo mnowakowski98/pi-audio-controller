@@ -11,9 +11,10 @@ import {
     setFile,
     setLoop,
     startAudio,
-    stopAudio
+    stopAudio,
+    unsetFile
 } from '../repositories/audioPlayer'
-import { getFile, getFileBuffer } from '../repositories/soundFiles'
+import { fileNameExists, getFile, getFileBuffer } from '../repositories/soundFiles'
 
 const router = express.Router()
 const upload = multer()
@@ -42,7 +43,7 @@ router.post('/', upload.single('file'), async (req, res) => {
         return
     }
 
-    await setFile(req.body['name'], metadata, req.file.buffer)
+    await setFile(fileName, metadata, req.file.buffer)
     res.send(getAudioInfo())
 })
 
@@ -55,6 +56,11 @@ router.post('/:id', async (req, res) => {
 
     await setFile(file.fileInfo.fileName, file.metadata, await getFileBuffer(file))
     res.send(getAudioInfo())
+})
+
+router.delete('/', async (_req, res) => {
+    await unsetFile()
+    res.sendStatus(200)
 })
 //#endregion
 

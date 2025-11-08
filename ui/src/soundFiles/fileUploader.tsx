@@ -6,7 +6,13 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import settingsContext from '../settingsContext'
 
-export default function FileUploader(props: { children?: ReactElement }) {
+interface FileUploaderProps {
+    children?: ReactElement,
+    queryKey: string,
+    onSuccess?: () => void
+}
+
+export default function FileUploader(props: FileUploaderProps) {
     const uploadUrl = useContext(settingsContext).hostUrl
     const queryClient = useQueryClient()
 
@@ -20,30 +26,36 @@ export default function FileUploader(props: { children?: ReactElement }) {
             body.append('file', audioFile!)
             body.append('name', audioFile!.name)
             const response = await fetch(uploadUrl, { method: 'POST', body })
+            if (response.status == 400) {
+                const errorMessage = await response.text()
+                throw new Error(errorMessage)
+            }
             return response.json()
         },
         onSuccess: (data) => {
-            if (data == null) return
-            queryClient.setQueryData(['soundFileInfo'], data)
+            queryClient.setQueryData([props.queryKey], data)
             setAudioFile(null)
             if (fileInput.current != null) fileInput.current.value = ''
+            if(props.onSuccess != undefined) props.onSuccess()
         }
     })
 
-    return <InputGroup>
-        <InputGroup.Text>Upload audio</InputGroup.Text>
-        <Form.Control
-            ref={fileInput}
-            type='file'
-            disabled={uploadFile.isPending}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                setAudioFile(event.target.files?.item(0))}
-        />
-        <Button
-            type='button'
-            disabled={audioFile == null || uploadFile.isPending == true}
-            onClick={() => uploadFile.mutate()}
-        >Upload</Button>
-        {props.children}
-    </InputGroup>
+    return <>
+        <InputGroup>
+            <InputGroup.Text>Upload audio</InputGroup.Text>
+            <Form.Control
+                ref={fileInput}
+                type='file'
+                disabled={uploadFile.isPending}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                    setAudioFile(event.target.files?.item(0))}
+            />
+            <Button
+                type='button'
+                disabled={audioFile == null || uploadFile.isPending == true}
+                onClick={() => uploadFile.mutate()}
+            >Upload</Button>
+            {props.children}
+        </InputGroup>
+    </>
 }

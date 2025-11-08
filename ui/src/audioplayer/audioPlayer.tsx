@@ -16,13 +16,14 @@ import ClearButton from './clearButton'
 import useAudioInfo from './useAudioInfo'
 import settingsContext from '../settingsContext'
 import { audioFileInfoKey } from '../models/audioFileInfo'
+import { audioStatusKey } from '../models/audioStatus'
 
 export default function AudioPlayer() {
     const baseUrl = useContext(settingsContext).hostUrl
     const queryClient = useQueryClient()
 
     const audioInfo = useAudioInfo()
-    const hasFile = audioInfo.data != null
+    const hasFile = () => audioInfo.isSuccess == true && audioInfo.data?.id != 'none'
 
     const [selectedFile, setSelectedFile] = useState<string | null>(null)
     const setFile = useMutation({
@@ -31,19 +32,23 @@ export default function AudioPlayer() {
     })
 
     return <Container fluid>
-        <Row className='mt-3 mb-2'>
-            <Col xs={9}>
+        <Row className='mb-2'>
+            <Col xs={9} className='d-flex align-items-end'>
                 <FileUploader
-                    children={<ClearButton clearId={selectedFile} hasFile={hasFile} />}
+                    children={<ClearButton hasFile={hasFile()} />}
+                    queryKey={audioFileInfoKey}
+                    onSuccess={() => queryClient.fetchQuery({
+                        queryKey: [audioStatusKey]
+                    })}
                 />
             </Col>
-            <Col>
-                <PlayerControls hasFile={hasFile} />
+            <Col className='d-flex align-items-end'>
+                <PlayerControls hasFile={hasFile()} />
             </Col>
         </Row>
 
-        {hasFile && <hr />}
-        {hasFile && <Row>
+        {hasFile() && <hr />}
+        {hasFile() && <Row>
             <AudioInfo />
         </Row>}
 
