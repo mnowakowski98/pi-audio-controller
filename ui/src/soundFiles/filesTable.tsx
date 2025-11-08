@@ -33,7 +33,7 @@ export default function FilesTable(props: FilesTableProps) {
     if (soundFiles.isError == true) return 'Goofed'
 
     return <>
-        <Table>
+        {(soundFiles.data?.length ?? 0) > 0 && <Table>
             <thead>
                 <tr>
                     <th>Filename</th>
@@ -42,7 +42,7 @@ export default function FilesTable(props: FilesTableProps) {
                     <th>Duration</th>
                 </tr>
             </thead>
-            {(soundFiles.data?.length ?? 0) > 0 && <tbody>
+            <tbody>
                 {soundFiles.data?.map((file) =>
                     <tr key={file.id}
                         onClick={() => {
@@ -61,8 +61,8 @@ export default function FilesTable(props: FilesTableProps) {
                         </td>}
                     </tr>
                 )}
-            </tbody>}
-        </Table>
+            </tbody>
+        </Table>}
         {soundFiles.data?.length == 0 && <div className='text-center mb-3'>No files</div>}
     </>
 }
