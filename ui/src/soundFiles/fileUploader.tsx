@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import InputGroup from 'react-bootstrap/InputGroup'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
+import Toast from 'react-bootstrap/Toast'
+
 import settingsContext from '../settingsContext'
 
 interface FileUploaderProps {
@@ -19,6 +21,8 @@ export default function FileUploader(props: FileUploaderProps) {
     const fileInput = useRef<HTMLInputElement | null>(null)
     const [audioFile, setAudioFile] = useState<File | null>()
 
+    const [showErrorToast, setShowErrorToast] = useState(false)
+
     const uploadFile = useMutation({
         mutationFn: async () => {
             if (audioFile == null) return null
@@ -32,6 +36,7 @@ export default function FileUploader(props: FileUploaderProps) {
             }
             return response.json()
         },
+        onError: () => setShowErrorToast(true),
         onSuccess: (data) => {
             queryClient.setQueryData([props.queryKey], data)
             setAudioFile(null)
@@ -56,6 +61,9 @@ export default function FileUploader(props: FileUploaderProps) {
                 onClick={() => uploadFile.mutate()}
             >Upload</Button>
             {props.children}
+            <Toast show={showErrorToast} onClose={() => setShowErrorToast(false)} delay={3000} autohide>
+                <Toast.Body className='fw-bolder text-bg-danger'>{uploadFile.error?.message}</Toast.Body>
+            </Toast>
         </InputGroup>
     </>
 }
