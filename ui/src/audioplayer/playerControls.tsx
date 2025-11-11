@@ -39,7 +39,7 @@ export default function PlayerControls(props: PlayerControlsProps) {
             })
             return response.json()
         },
-        onSuccess: (data) => queryClient.setQueryData([audioStatus], data)
+        onSuccess: (data) => queryClient.setQueryData([audioStatusKey], data)
     })
 
     if (audioStatus.isLoading) return 'Loading'
