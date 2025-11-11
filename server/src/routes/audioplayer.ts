@@ -14,7 +14,7 @@ import {
     stopAudio,
     unsetFile
 } from '../repositories/audioPlayer'
-import { fileNameExists, getFile, getFileBuffer } from '../repositories/soundFiles'
+import { getFile, getFileBuffer } from '../repositories/soundFiles'
 
 const router = express.Router()
 const upload = multer()

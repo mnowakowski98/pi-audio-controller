@@ -15,8 +15,8 @@ export default function ClearButton(props: ClearButtonProps) {
     const queryClient = useQueryClient()
     
     const clearFile = useMutation({
-        mutationFn: async () => (await fetch(url, { method: 'DELETE' })).json(),
-        onSuccess: () => queryClient.refetchQueries({
+        mutationFn: async () => (await fetch(url, { method: 'DELETE' })),
+        onSuccess: () => queryClient.fetchQuery({
             queryKey: [audioFileInfoKey]
         })
     })

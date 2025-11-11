@@ -26,7 +26,7 @@ if (ffmpeg == null) throw('ffmpeg not found')
 let speaker: Speaker | null = null
 let audio: Stream.Readable | null = null
 
-let uploadedFileName = 'None'
+let uploadedFileName: string | null = null 
 let audioMetadata: IAudioMetadata | null = null
 
 const playing = () => speaker?.closed == false
@@ -55,9 +55,9 @@ export const getAudioStatus = (): AudioStatus => ({
 
 export const hasAudioFile = () => audioMetadata != null && uploadedFileName != null
 
-export const getAudioInfo = (): AudioFileInfo | null => (hasAudioFile() ? {
+export const getAudioInfo = (): AudioFileInfo => (hasAudioFile() ? {
     id: 'playing',
-    fileName: uploadedFileName,
+    fileName: uploadedFileName ?? 'None',
     title: audioMetadata?.common.title ?? 'No title',
     artist: audioMetadata?.common.artist ?? 'No artist',
     duration: audioMetadata?.format.duration ?? 0
@@ -124,6 +124,6 @@ export const unsetFile = async () => {
     if (playing()) stopAudio()
     await writeFile(playingFile, '')
     await writeFile(originalFile, '')
-    uploadedFileName = 'None'
+    uploadedFileName = null
     audioMetadata = null
 }

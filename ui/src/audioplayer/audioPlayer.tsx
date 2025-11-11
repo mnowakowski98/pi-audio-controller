@@ -28,7 +28,10 @@ export default function AudioPlayer() {
     const [selectedFile, setSelectedFile] = useState<string | null>(null)
     const setFile = useMutation({
         mutationFn: async () => (await fetch(new URL(`./${selectedFile}`, baseUrl), { method: 'POST' })).json(),
-        onSuccess: (data) => queryClient.setQueryData([audioFileInfoKey], data)
+        onSuccess: (data) => {
+            queryClient.setQueryData([audioFileInfoKey], data)
+            setSelectedFile(null)
+        }
     })
 
     return <Container fluid>
@@ -47,12 +50,10 @@ export default function AudioPlayer() {
             </Col>
         </Row>
 
-        {hasFile() && <hr />}
-        {hasFile() && <Row>
-            <AudioInfo />
-        </Row>}
+        <Row className='border my-3'>
+            <Col className='text-center'>{hasFile() ? <AudioInfo /> : 'No audio'}</Col>
+        </Row>
 
-        <hr />
         <Row>
             <Col>
                 <FilesTable
@@ -61,6 +62,11 @@ export default function AudioPlayer() {
                     selectedFileId={selectedFile}
                     onSelect={(id: string) => setSelectedFile(id)}
                 />
+            </Col>
+        </Row>
+
+        <Row>
+            <Col>
                 <Button
                     type='button'
                     className='d-block w-100'
