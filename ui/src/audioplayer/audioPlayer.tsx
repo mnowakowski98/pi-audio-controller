@@ -16,38 +16,44 @@ import ClearButton from './clearButton'
 import useAudioInfo from './useAudioInfo'
 import settingsContext from '../settingsContext'
 import { audioFileInfoKey } from '../models/audioFileInfo'
+import { audioStatusKey } from '../models/audioStatus'
 
 export default function AudioPlayer() {
     const baseUrl = useContext(settingsContext).hostUrl
     const queryClient = useQueryClient()
 
     const audioInfo = useAudioInfo()
-    const hasFile = audioInfo.data != null
+    const hasFile = () => audioInfo.isSuccess == true && audioInfo.data?.id != 'none'
 
     const [selectedFile, setSelectedFile] = useState<string | null>(null)
     const setFile = useMutation({
         mutationFn: async () => (await fetch(new URL(`./${selectedFile}`, baseUrl), { method: 'POST' })).json(),
-        onSuccess: (data) => queryClient.setQueryData([audioFileInfoKey], data)
+        onSuccess: (data) => {
+            queryClient.setQueryData([audioFileInfoKey], data)
+            setSelectedFile(null)
+        }
     })
 
     return <Container fluid>
-        <Row className='mt-3 mb-2'>
-            <Col xs={9}>
+        <Row className='mb-2'>
+            <Col xs={9} className='d-flex align-items-end'>
                 <FileUploader
-                    children={<ClearButton clearId={selectedFile} hasFile={hasFile} />}
+                    children={<ClearButton hasFile={hasFile()} />}
+                    queryKey={audioFileInfoKey}
+                    onSuccess={() => queryClient.fetchQuery({
+                        queryKey: [audioStatusKey]
+                    })}
                 />
             </Col>
-            <Col>
-                <PlayerControls hasFile={hasFile} />
+            <Col className='d-flex align-items-end'>
+                <PlayerControls hasFile={hasFile()} />
             </Col>
         </Row>
 
-        {hasFile && <hr />}
-        {hasFile && <Row>
-            <AudioInfo />
-        </Row>}
+        <Row className='border my-3'>
+            <Col className='text-center'>{hasFile() ? <AudioInfo /> : 'No audio'}</Col>
+        </Row>
 
-        <hr />
         <Row>
             <Col>
                 <FilesTable
@@ -56,6 +62,11 @@ export default function AudioPlayer() {
                     selectedFileId={selectedFile}
                     onSelect={(id: string) => setSelectedFile(id)}
                 />
+            </Col>
+        </Row>
+
+        <Row>
+            <Col>
                 <Button
                     type='button'
                     className='d-block w-100'

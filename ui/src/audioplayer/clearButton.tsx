@@ -7,7 +7,6 @@ import settingsContext from '../settingsContext'
 import { audioFileInfoKey } from '../models/audioFileInfo'
 
 interface ClearButtonProps {
-    clearId: string | null,
     hasFile: boolean
 }
 
@@ -15,15 +14,17 @@ export default function ClearButton(props: ClearButtonProps) {
     const url = useContext(settingsContext).hostUrl
     const queryClient = useQueryClient()
     
-    const selectFile = useMutation({
-        mutationFn: async () => (await fetch(url, { method: 'POST', body: props.clearId })).json(),
-        onSuccess: (data) => queryClient.setQueryData([audioFileInfoKey], data)
+    const clearFile = useMutation({
+        mutationFn: async () => (await fetch(url, { method: 'DELETE' })),
+        onSuccess: () => queryClient.fetchQuery({
+            queryKey: [audioFileInfoKey]
+        })
     })
 
     return <Button
         type='button'
-        disabled={selectFile.isPending == true || props.hasFile == false}
-        onClick={() => selectFile.mutate()}>
+        disabled={clearFile.isPending == true || props.hasFile == false}
+        onClick={() => clearFile.mutate()}>
         Clear file
     </Button>
 }

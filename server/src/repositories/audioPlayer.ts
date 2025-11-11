@@ -26,7 +26,7 @@ if (ffmpeg == null) throw('ffmpeg not found')
 let speaker: Speaker | null = null
 let audio: Stream.Readable | null = null
 
-let uploadedFileName = 'None'
+let uploadedFileName: string | null = null 
 let audioMetadata: IAudioMetadata | null = null
 
 const playing = () => speaker?.closed == false
@@ -55,20 +55,19 @@ export const getAudioStatus = (): AudioStatus => ({
 
 export const hasAudioFile = () => audioMetadata != null && uploadedFileName != null
 
-export const getAudioInfo = (): AudioFileInfo | null => (hasAudioFile() ? {
+export const getAudioInfo = (): AudioFileInfo => (hasAudioFile() ? {
     id: 'playing',
-    fileName: uploadedFileName,
+    fileName: uploadedFileName ?? 'None',
     title: audioMetadata?.common.title ?? 'No title',
     artist: audioMetadata?.common.artist ?? 'No artist',
     duration: audioMetadata?.format.duration ?? 0
-} : null)
-
-export const setFile = async (fileName: string, metadata: IAudioMetadata, fileData: Buffer) => {
-    uploadedFileName = fileName
-    audioMetadata = metadata
-    await writeFile(originalFile, fileData)
-    await exec(`${ffmpeg} -i ${originalFile} -y -f s16le -acodec pcm_s16le ${playingFile}`)
-}
+} : {
+    id: 'none',
+    fileName: 'No file',
+    title: 'No file',
+    artist: 'No file',
+    duration: 0
+})
 
 const audioEnd = (overrideLoop = false) => {
     const doLoop = loop == true && overrideLoop == false
@@ -107,4 +106,24 @@ export const stopAudio = () => {
     audio?.unpipe()
     audio?.emit('end', true)
     audio?.removeListener('end', audioEnd)
+}
+
+export const setFile = async (fileName: string, metadata: IAudioMetadata, fileData: Buffer) => {
+    const wasPlaying = playing()
+    if (wasPlaying) stopAudio()
+
+    uploadedFileName = fileName
+    audioMetadata = metadata
+    await writeFile(originalFile, fileData)
+    await exec(`${ffmpeg} -i ${originalFile} -y -f s16le -acodec pcm_s16le ${playingFile}`)
+
+    if (wasPlaying) startAudio()
+}
+
+export const unsetFile = async () => {
+    if (playing()) stopAudio()
+    await writeFile(playingFile, '')
+    await writeFile(originalFile, '')
+    uploadedFileName = null
+    audioMetadata = null
 }
